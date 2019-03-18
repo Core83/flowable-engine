@@ -60,13 +60,15 @@ public class SecurityConfiguration {
     @Autowired
     protected RemoteIdmAuthenticationProvider authenticationProvider;
 
-    @Bean
-    public FlowableCookieFilterRegistrationBean flowableCookieFilterRegistrationBean(RemoteIdmService remoteIdmService, FlowableCommonAppProperties properties) {
-        FlowableCookieFilterRegistrationBean filter = new FlowableCookieFilterRegistrationBean(remoteIdmService, properties);
-        filter.addUrlPatterns("/app/*");
-        filter.setRequiredPrivileges(Collections.singletonList(DefaultPrivileges.ACCESS_MODELER));
-        return filter;
-    }
+    //去除权限依赖
+//    @Bean
+//    public FlowableCookieFilterRegistrationBean flowableCookieFilterRegistrationBean(RemoteIdmService remoteIdmService, FlowableCommonAppProperties properties) {
+//        FlowableCookieFilterRegistrationBean filter = new FlowableCookieFilterRegistrationBean(remoteIdmService, properties);
+//        filter.addUrlPatterns("/app/*");
+//        filter.setRequiredPrivileges(Collections.singletonList(DefaultPrivileges.ACCESS_MODELER));
+//        return filter;
+//    }
+
     
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) {
@@ -78,40 +80,41 @@ public class SecurityConfiguration {
             LOGGER.error("Could not configure authentication mechanism:", e);
         }
     }
-
-    @Configuration
-    @Order(10)
-    public static class FormLoginWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
-
-        @Autowired
-        protected FlowableCookieFilterRegistrationBean flowableCookieFilterRegistrationBean;
-
-        @Autowired
-        protected AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler;
-
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http
-                .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                    .addFilterBefore(flowableCookieFilterRegistrationBean.getFilter(), UsernamePasswordAuthenticationFilter.class)
-                    .logout()
-                        .logoutUrl("/app/logout")
-                        .logoutSuccessHandler(ajaxLogoutSuccessHandler)
-                        .addLogoutHandler(new ClearFlowableCookieLogoutHandler())
-                .and()
-                    .csrf()
-                        .disable() // Disabled, cause enabling it will cause sessions
-                        .headers()
-                        .frameOptions()
-                        .sameOrigin()
-                        .addHeaderWriter(new XXssProtectionHeaderWriter())
-                .and()
-                    .authorizeRequests()
-                    .antMatchers(REST_ENDPOINTS_PREFIX + "/**").hasAuthority(DefaultPrivileges.ACCESS_MODELER);
-        }
-    }
+//去除权限依赖
+//    @Configuration
+//    @Order(10)
+//    public static class FormLoginWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+//
+//        @Autowired
+//
+// protected FlowableCookieFilterRegistrationBean flowableCookieFilterRegistrationBean;
+//
+//        @Autowired
+//        protected AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler;
+//
+//        @Override
+//        protected void configure(HttpSecurity http) throws Exception {
+//            http
+//                .sessionManagement()
+//                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and()
+//                    .addFilterBefore(flowableCookieFilterRegistrationBean.getFilter(), UsernamePasswordAuthenticationFilter.class)
+//                    .logout()
+//                        .logoutUrl("/app/logout")
+//                        .logoutSuccessHandler(ajaxLogoutSuccessHandler)
+//                        .addLogoutHandler(new ClearFlowableCookieLogoutHandler())
+//                .and()
+//                    .csrf()
+//                        .disable() // Disabled, cause enabling it will cause sessions
+//                        .headers()
+//                        .frameOptions()
+//                        .sameOrigin()
+//                        .addHeaderWriter(new XXssProtectionHeaderWriter())
+//                .and()
+//                    .authorizeRequests()
+//                    .antMatchers(REST_ENDPOINTS_PREFIX + "/**").hasAuthority(DefaultPrivileges.ACCESS_MODELER);
+//        }
+//    }
     
     //
     // BASIC AUTH
@@ -138,20 +141,21 @@ public class SecurityConfiguration {
                 .and()
                     .csrf()
                     .disable();
-
-            if (modelerAppProperties.isRestEnabled()) {
-
-                if (restAppProperties.isVerifyRestApiPrivilege()) {
-                    http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").hasAuthority(DefaultPrivileges.ACCESS_REST_API).and().httpBasic();
-                } else {
-                    http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").authenticated().and().httpBasic();
-                    
-                }
-                
-            } else {
-                http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").denyAll();
-                
-            }
+            http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").permitAll();
+//去除权限依赖
+//            if (modelerAppProperties.isRestEnabled()) {
+//
+//                if (restAppProperties.isVerifyRestApiPrivilege()) {
+//                    http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").hasAuthority(DefaultPrivileges.ACCESS_REST_API).and().httpBasic();
+//                } else {
+//                    http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").authenticated().and().httpBasic();
+//
+//                }
+//
+//            } else {
+//                http.antMatcher("/api/**").authorizeRequests().antMatchers("/api/**").denyAll();
+//
+//            }
             
         }
     }
